@@ -2,6 +2,13 @@
 
 bool Arguments::Parse(int argc, char** argv)
 {
+    if (argc == 1)
+    {
+        Arguments::PrintHelp();
+        return 1;
+    }
+
+
 	std::string::size_type size;
 
 	for (int i = 1; i < argc;)
@@ -99,7 +106,7 @@ bool Arguments::Parse(int argc, char** argv)
 			argument_set['m'] = true;
 		}
 
-		// momentum
+		// error
 		else if (!strcmp(argv[i], "-e") || !strcmp(argv[i],"--error"))
 		{
 			if (argument_set['e'])
@@ -120,12 +127,15 @@ bool Arguments::Parse(int argc, char** argv)
 				return PrintErrAndReturn("Momentum not in interval (0, ?>.");
 
 			momentum = converted;
-			argument_set['m'] = true;
+			argument_set['e'] = true;
 		}
 
 		// input file
 		else if (!strcmp(argv[i], "-f") || !strcmp(argv[i],"--input-file"))
 		{
+			if (argument_set['f'])
+				return PrintErrAndReturn("File option entered more than once.");
+
 			if (i+1 >= argc)
 				return PrintErrAndReturn("Value for input file not entered.");
 
@@ -158,11 +168,12 @@ bool Arguments::Parse(int argc, char** argv)
 			for (std::string s: parsed)
 			{
 				int result = std::stoi(s, &size);
-				if (s.length() != size)
+
+                if (s.length() != size)
 					return PrintErrAndReturn("Conversion to number failed on the first line.");
 
 				if (result < 1)
-					return PrintErrAndReturn("Number on first line must be bigger than 0.");
+					return PrintErrAndReturn("Numbers on first line must be bigger than 0.");
 
 				converted.push_back(result);
 			}
@@ -188,11 +199,10 @@ bool Arguments::Parse(int argc, char** argv)
 				for (int input_index = 0; input_index < input_count; input_index++)
 				{
 					double result = std::stod(parsed[input_index], &size);
+
 					if (parsed[input_index].length() != size)
 						return PrintErrAndReturn("Conversion to number failed on " + std::to_string(line_index+1) + ". line.");
 
-					if (result < 1)
-						return PrintErrAndReturn("Number on first line must be bigger than 0.");
 					input_data[line_index].push_back(result);
 				}
 
@@ -205,8 +215,6 @@ bool Arguments::Parse(int argc, char** argv)
 						return PrintErrAndReturn(message);
 					}
 
-					if (result < 1)
-						return PrintErrAndReturn("Number on first line must be bigger than 0.");
 					expected_output[line_index].push_back(result);
 				}
 			}
@@ -231,11 +239,11 @@ bool Arguments::Parse(int argc, char** argv)
 	std::cout << "argument count - " << argument_set.size() << std::endl;
 
     // TODO: for debugging purposes
-	//if (argument_set.size() != 5)
-	//	return false;
+	if (argument_set.size() < 6)
+		return false;
 
 	if (argument_set['f'])
-		return PrintErrAndReturn("Input file option entered mkore than once.");
+		return PrintErrAndReturn("Input file option entered more than once.");
 	argument_set['f'] = true;
 
 	return true;
@@ -266,4 +274,55 @@ void Arguments::SplitWhitespaces(const std::string& input, std::vector<std::stri
 		std::istream_iterator<std::string>(),
 		std::back_inserter(result)
 	);
+}
+
+void Arguments::PrintDebugValues()
+{
+    if (argument_set['l'])
+    {
+        std::cout << "Layers : " << std::endl;
+        for (int i = 0; i < layers.size(); i++)
+            std:: cout << layers[i] << " ";
+        std:: cout << std::endl;
+    }
+
+    if (argument_set['r'])
+        std::cout << "lr - " << learning_rate << std::endl;
+
+    if (argument_set['b'])
+        std::cout << "lambda " << lambda << std::endl;
+
+    if (argument_set['m'])
+        std::cout << "momentum " << momentum << std::endl;
+
+    if (argument_set['f'])
+    {
+        std::cout << "Input data:" << std::endl;
+        for (auto v: input_data)
+        {
+            for (auto d: v)
+                std::cout << "'" << d << "' ";
+            std::cout << std::endl;
+        }
+
+        std::cout << "Expected data:" << std::endl;
+        for (auto v: expected_output)
+        {
+            for (auto d: v)
+                std::cout << "'" << d << "' ";
+            std::cout << std::endl;
+        }
+
+    }
+}
+
+void Arguments::PrintHelp()
+{
+    std::cout << "Required arguments: " << std::endl
+            << "-m, --momentum: momentum" << std::endl
+            << "-r, --learning-rate: momentum" << std::endl
+            << "-l, --layers: numbers of neuron in layers with delimeter \',\'" << std::endl
+            << "-b, --lambda: momentum" << std::endl
+            << "-f, --input-file" <<    std::endl
+            << "-e, --error" <<    std::endl;
 }

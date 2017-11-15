@@ -32,6 +32,12 @@ void Network::reloadArguments()
     }
 }
 
+Network::~Network()
+{
+    while (hidden_layers.size())
+        hidden_layers.pop_back();
+}
+
 double Network::Activation(double value)
 {
 	return 1/(1+exp(-lambda*value));

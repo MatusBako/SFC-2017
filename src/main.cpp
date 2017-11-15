@@ -1,6 +1,6 @@
 #include "layer.hpp"
 #include "args.hpp"
-#include <iostream>
+#include "network.hpp"
 
 void testParser(int argc, char** argv)
 {
@@ -8,42 +8,7 @@ void testParser(int argc, char** argv)
 	if (!args.Parse(argc, argv))
 		std::cout << "Parsing failed." << std::endl;
 
-	if (args.argument_set['l'])
-	{
-		std::cout << "Layers : " << std::endl;
-		for (int i = 0; i < args.layers.size(); i++)
-			std:: cout << args.layers[i] << " ";
-		std:: cout << std::endl;
-	}
-
-	if (args.argument_set['r'])
-		std::cout << "lr - " << args.learning_rate << std::endl;
-
-	if (args.argument_set['b'])
-		std::cout << "lambda " << args.lambda << std::endl;
-
-	if (args.argument_set['m'])
-		std::cout << "momentum " << args.momentum << std::endl;
-
-	if (args.argument_set['f'])
-	{
-		std::cout << "Input data:" << std::endl;
-		for (auto v: args.input_data)
-		{
-			for (auto d: v)
-				std::cout << "'" << d << "' ";
-			std::cout << std::endl;
-		}
-
-		std::cout << "Expected data:" << std::endl;
-		for (auto v: args.expected_output)
-		{
-			for (auto d: v)
-				std::cout << "'" << d << "' ";
-			std::cout << std::endl;
-		}
-
-	}
+	args.PrintDebugValues();
 }
 
 int main(int argc, char** argv)
@@ -56,6 +21,14 @@ int main(int argc, char** argv)
 	for (double val: input.getValues())
 		std::cout << val << std::endl;*/
 
-	testParser(argc, argv);
+	//testParser(argc, argv);
+
+
+    Arguments args;
+    if (!args.Parse(argc, argv))
+        std::cout << "Parsing failed." << std::endl;
+    else
+        Network net = Network(args);
+
 	return 0;
 }

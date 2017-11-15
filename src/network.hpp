@@ -13,8 +13,10 @@ public:
 	void Train();
 	double computeGradient();
 	void updateWeights();
-	explicit Network(Arguments args);
     void reloadArguments();
+
+    explicit Network(Arguments args);
+    ~Network();
 
 private:
     double Activation(double value);
