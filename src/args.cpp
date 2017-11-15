@@ -30,7 +30,7 @@ bool Arguments::Parse(int argc, char** argv)
 				else if (converted < 1)
 					return PrintErrAndReturn("Number of neurons in layer must be bigger than 0.");
 
-				this->layers.push_back(converted);
+				layers.push_back(static_cast<uint>(converted));
 			}
 			argument_set['l'] = true;
 		}
@@ -53,7 +53,7 @@ bool Arguments::Parse(int argc, char** argv)
 			if (converted <= 0 || converted > 1)
 				return PrintErrAndReturn("Learning rate not in interval (0, 1>.");
 
-			this->learning_rate = converted;
+			learning_rate = converted;
 			argument_set['r'] = true;
 		}
 
@@ -72,7 +72,7 @@ bool Arguments::Parse(int argc, char** argv)
 			if (s.length() != size)
 				return PrintErrAndReturn("Conversion error (lambda).");
 
-			this->lambda = converted;
+			lambda = converted;
 			argument_set['b'] = true;
 		}
 
@@ -95,7 +95,7 @@ bool Arguments::Parse(int argc, char** argv)
 			if (converted < 0.5 || converted > 0.95)
 				return PrintErrAndReturn("Momentum not in interval <0.5, 0.95>.");
 
-			this->momentum = converted;
+			momentum = converted;
 			argument_set['m'] = true;
 		}
 
@@ -119,7 +119,7 @@ bool Arguments::Parse(int argc, char** argv)
 				//TODO: proper error interval
 				return PrintErrAndReturn("Momentum not in interval (0, ?>.");
 
-			this->momentum = converted;
+			momentum = converted;
 			argument_set['m'] = true;
 		}
 
@@ -182,23 +182,23 @@ bool Arguments::Parse(int argc, char** argv)
 				if (parsed.size() != input_count + expected_count)
 					return PrintErrAndReturn("Wrong number count on line " + std::to_string(line_index+1) + ".");
 
-				this->input_data.push_back(std::vector<int>());
-				this->expected_data.push_back(std::vector<int>());
+                input_data.emplace_back();
+                expected_output.emplace_back();
 
 				for (int input_index = 0; input_index < input_count; input_index++)
 				{
-					int result = std::stoi(parsed[input_index], &size);
+					double result = std::stod(parsed[input_index], &size);
 					if (parsed[input_index].length() != size)
 						return PrintErrAndReturn("Conversion to number failed on " + std::to_string(line_index+1) + ". line.");
 
 					if (result < 1)
 						return PrintErrAndReturn("Number on first line must be bigger than 0.");
-					this->input_data[line_index].push_back(result);
+					input_data[line_index].push_back(result);
 				}
 
 				for (int expected_index = 0; expected_index < expected_count; expected_index++)
 				{
-					int result = std::stoi(parsed[input_count + expected_index], &size);
+					double result = std::stod(parsed[input_count + expected_index], &size);
 					if (parsed[expected_index].length() != size)
 					{
 						std::string message = "Conversion to number failed on "+ std::to_string(line_index+1) + ". line.";
@@ -207,7 +207,7 @@ bool Arguments::Parse(int argc, char** argv)
 
 					if (result < 1)
 						return PrintErrAndReturn("Number on first line must be bigger than 0.");
-					this->expected_data[line_index].push_back(result);
+					expected_output[line_index].push_back(result);
 				}
 			}
 
@@ -230,6 +230,7 @@ bool Arguments::Parse(int argc, char** argv)
 	
 	std::cout << "argument count - " << argument_set.size() << std::endl;
 
+    // TODO: for debugging purposes
 	//if (argument_set.size() != 5)
 	//	return false;
 
@@ -246,9 +247,6 @@ bool Arguments::PrintErrAndReturn(std::string message)
 	return false;
 }
 
-// MAT zaznamy
-// https://mega.nz/#F!Ud9kTajS!igkQqk9J4idsyQ3FPo6bHA
-
 void Arguments::Split(const std::string &s, char delim, std::vector<std::string>& result)
 {
     std::stringstream ss;
@@ -256,7 +254,6 @@ void Arguments::Split(const std::string &s, char delim, std::vector<std::string>
     std::string item;
     while (std::getline(ss, item, delim)) 
     {
-
         result.push_back(item);
     }
 }

@@ -14,7 +14,6 @@ class Layer
 {
 public:	
 	int node_count;
-	//virtual void passValues(std::vector<std::reference_wrapper<double>>& dest) = 0;
 
 protected:
 	Layer() {};
@@ -26,8 +25,7 @@ public:
 	InputLayer(int input_count);
 
 	std::vector<double> getValues();
-	//void passValues(std::vector<std::reference_wrapper<double>>& dest);
-	void setValues(std::vector<double> v);
+	void setValues(std::vector<double>* v);
 
 //private:
 	std::vector<double> values;
@@ -37,23 +35,21 @@ public:
 class HiddenLayer: public Layer
 {
 public:
-	HiddenLayer(Layer& input, int neuron_count);
+	HiddenLayer(std::shared_ptr<LayerAdapter> input, int neuron_count);
 
 	std::vector<double> getValues();
-	//void passValues(std::vector<std::reference_wrapper<double>>& dest);
 	void computeValue();
 	void computePreviousLayerDelta();
 	double computeLastLayerDelta(const std::vector<double>& expected);
 	void computeWeights();
 	void adjustWeights();
 
-//private:
+private:
 	std::shared_ptr<LayerAdapter> previous_layer;
 	std::vector<Neuron> neurons;
 	double lambda;
 	double momentum;
 	double learning_rate;
-	//std::vector<std::reference_wrapper<double>> input_values;
 };
 
 class LayerAdapter
@@ -63,7 +59,7 @@ public:
 	LayerAdapter(std::shared_ptr<InputLayer> layer);
 	
 	std::vector<double> getValues();
-	void computeValue();
+    int getNodeCount();
 
 //private:
 	std::shared_ptr<HiddenLayer> hidden = nullptr;

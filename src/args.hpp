@@ -25,8 +25,8 @@ public:
     double expected_error;
 	std::map<char, bool> argument_set;
 	//TODO training and testing data
-	std::vector<std::vector<int>> input_data;
-	std::vector<std::vector<int>> expected_data;
+	std::vector<std::vector<double>> input_data;
+	std::vector<std::vector<double>> expected_output;
 
 	bool PrintErrAndReturn(std::string message);
 	void Split(const std::string &s, char delim, std::vector<std::string>& result);	

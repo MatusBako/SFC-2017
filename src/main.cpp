@@ -36,7 +36,7 @@ void testParser(int argc, char** argv)
 		}
 
 		std::cout << "Expected data:" << std::endl;
-		for (auto v: args.expected_data)
+		for (auto v: args.expected_output)
 		{
 			for (auto d: v)
 				std::cout << "'" << d << "' ";

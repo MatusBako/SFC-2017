@@ -2,11 +2,34 @@
 
 Network::Network(Arguments args)
 {
-	lambda = args.lambda;
-	learning_rate = args.learning_rate;
-	momentum = args.momentum;
+    arguments = args;
+    reloadArguments();
+}
 
-	Error_expected = args.
+
+void Network::reloadArguments()
+{
+    lambda = arguments.lambda;
+    learning_rate = arguments.learning_rate;
+    momentum = arguments.momentum;
+    error_expected = arguments.expected_error;
+    input_data = arguments.input_data;
+    expected_output = arguments.expected_output;
+
+    int input_neuron_count = input_data[0].size();
+    std::shared_ptr<InputLayer> input_layer = std::make_shared<InputLayer>(input_neuron_count);
+
+    for (unsigned int neuron_count: arguments.layers)
+    {
+        if (hidden_layers.size())
+            //create new Hidden layer with encapsulated previous layer
+            hidden_layers.push_back(std::make_shared<HiddenLayer>(
+                    std::make_shared<LayerAdapter>(hidden_layers[hidden_layers.size() - 1]), neuron_count));
+        else
+            //create new Hidden layer with encapsulated input layer
+            hidden_layers.push_back(std::make_shared<HiddenLayer>(
+                    std::make_shared<LayerAdapter>(input_layer), neuron_count));
+    }
 }
 
 double Network::Activation(double value)
@@ -18,11 +41,10 @@ void Network::Train()
 {
 	do 
 	{ 
-		Error_total = 0;
+		error_total = 0;
 		for (int input_index = 0; input_index < input_data.size(); input_index++)
 		{
-			// load inputs into net
-			layers[0].input->setValues(input_data[input_index]);
+			input_layer->setValues(&input_data[input_index]);
 
 			ForwardPass();
 
@@ -34,40 +56,40 @@ void Network::Train()
 			AdjustWeights();
  		}
  	}
- 	while (Error_total > Error_expected);
+ 	while (error_total > error_expected);
 
 }
 
 void Network::ForwardPass() 
 {
 	//first layer only contains inputs
-	for (int layer_idx = 1; layer_idx < layers.size(); layer_idx++)
-		layers[layer_idx].hidden->computeValue();
+	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+		hidden_layers[layer_idx]->computeValue();
 }
 
 void Network::ComputeLastLayerDelta(int input_index)
 {
 	//iterate over neurons of last layer (last layer doesn't have constant neuron)
-	HiddenLayer& layer_last = (*layers[layers.size()-1].hidden);
-	double Error_sample = layer_last.computeLastLayerDelta(expected[input_index]);
-	Error_total += Error_sample;
+	HiddenLayer& layer_last = (*hidden_layers[hidden_layers.size()-1]);
+	double Error_sample = layer_last.computeLastLayerDelta(expected_output[input_index]);
+	error_total += Error_sample;
 }
 
 //not iterating over first two layers
 void Network::ComputeDeltas()
 {
-	for (int layer_idx = layers.size() - 1; layer_idx > 1; layer_idx--)
-		layers[layer_idx].hidden->computePreviousLayerDelta();
+	for (int layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
+		hidden_layers[layer_idx]->computePreviousLayerDelta();
 }
 
 void Network::ComputeWeights()
 {
-	for (int layer_idx = 1; layer_idx < layers.size(); layer_idx++)
-		layers[layer_idx].hidden->computeWeights();
+	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+		hidden_layers[layer_idx]->computeWeights();
 }
 
 void Network::AdjustWeights()
 {
-	for (int layer_idx = 1; layer_idx < layers.size(); layer_idx++)
-		layers[layer_idx].hidden->adjustWeights();
+	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+		hidden_layers[layer_idx]->adjustWeights();
 }

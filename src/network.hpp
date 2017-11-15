@@ -14,6 +14,7 @@ public:
 	double computeGradient();
 	void updateWeights();
 	explicit Network(Arguments args);
+    void reloadArguments();
 
 private:
     double Activation(double value);
@@ -23,14 +24,17 @@ private:
     void ComputeWeights();
     void AdjustWeights();
 
-    std::vector<LayerAdapter> layers;
-    double Error_total;
-    double Error_expected;
+
+    Arguments arguments;
+    std::shared_ptr<InputLayer> input_layer;
+    std::vector<std::shared_ptr<HiddenLayer>> hidden_layers;
+    double error_total;
+    double error_expected;
     double lambda;
     double learning_rate;
     double momentum;
     std::vector<std::vector<double>> input_data;
-    std::vector<std::vector<double>> expected;
+    std::vector<std::vector<double>> expected_output;
 };
 
 #endif

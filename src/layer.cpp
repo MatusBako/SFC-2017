@@ -11,22 +11,22 @@ std::vector<double> InputLayer::getValues()
 	return values;
 }
 
-void InputLayer::setValues(std::vector<double> src)
+void InputLayer::setValues(std::vector<double>* src)
 {
 	values.clear();
-	for (double value: src)
+	for (double value: *src)
 		values.push_back(value);
 }
 
-HiddenLayer::HiddenLayer(Layer& input_layer, int neuron_count)
+HiddenLayer::HiddenLayer(std::shared_ptr<LayerAdapter> input_layer,int neuron_count)
 {
-	//inputLayer.passValues(input_values);
+    previous_layer = input_layer;
 
 	for (int i = 0; i < neuron_count; i++)
 	{
-		Neuron neuron;
-		for (int weight_idx = 0; weight_idx < input_layer.node_count; weight_idx++)
-			neuron.weights.push_back(WeightInitializer::initXavier(input_layer.node_count));
+		Neuron neuron = {};
+		for (int weight_idx = 0; weight_idx < input_layer->getNodeCount(); weight_idx++)
+			neuron.weights.push_back(WeightInitializer::initXavier(input_layer->getNodeCount()));
 
 		neurons.push_back(neuron);
 	}
@@ -63,7 +63,7 @@ double HiddenLayer::computeLastLayerDelta(const std::vector<double>& expected)
 	{
 		Neuron& neuron = this->neurons[neuron_idx];
 
-		error += 0.5 * (expected[neuron_idx] - neuron.value)*(expected[neuron_idx] - neuron.value);
+		error += 0.5 * (expected[neuron_idx] - neuron.value) * (expected[neuron_idx] - neuron.value);
 		neuron.delta = (expected[neuron_idx] - neuron.value) * lambda * neuron.value * (1 - neuron.value);
 	}
 	return error;
@@ -128,19 +128,26 @@ void HiddenLayer::adjustWeights()
 
 LayerAdapter::LayerAdapter(std::shared_ptr<HiddenLayer> layer)
 {
-	hidden = layer;
-	input = nullptr;
+    hidden = layer;
+    input = nullptr;
 }
 
 LayerAdapter::LayerAdapter(std::shared_ptr<InputLayer> layer)
 {
-	input = layer;
 	hidden = nullptr;
+    input = layer;
 }
 
 std::vector<double> LayerAdapter::getValues()
 {
-	if (hidden)
-		return hidden->getValues();
-	return input->getValues();
+    if (hidden)
+        return hidden->getValues();
+    return input->getValues();
+}
+
+int LayerAdapter::getNodeCount()
+{
+    if (hidden)
+        return hidden->node_count;
+    return input->node_count;
 }
