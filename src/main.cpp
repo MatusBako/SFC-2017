@@ -25,10 +25,16 @@ int main(int argc, char** argv)
 
 
     Arguments args;
-    if (!args.Parse(argc, argv))
+    if (!args.Parse(argc, argv)) {
         std::cout << "Parsing failed." << std::endl;
+    }
     else
+    {
         Network net = Network(args);
+        net.Train();
+    }
+
+
 
 	return 0;
 }

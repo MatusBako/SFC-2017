@@ -38,18 +38,15 @@ public:
 	HiddenLayer(std::shared_ptr<LayerAdapter> input, int neuron_count);
 
 	std::vector<double> getValues();
-	void computeValue();
-	void computePreviousLayerDelta();
-	double computeLastLayerDelta(const std::vector<double>& expected);
-	void computeWeights();
+	void computeValue(double lambda);
+	void computePreviousLayerDelta(double lambda);
+	double computeLastLayerDelta(const std::vector<double>& expected, double lambda);
+	void computeWeights(double learning_rate, double momentum);
 	void adjustWeights();
 
 private:
 	std::shared_ptr<LayerAdapter> previous_layer;
 	std::vector<Neuron> neurons;
-	double lambda;
-	double momentum;
-	double learning_rate;
 };
 
 class LayerAdapter

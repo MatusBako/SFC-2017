@@ -19,7 +19,6 @@ public:
     ~Network();
 
 private:
-    double Activation(double value);
     void ForwardPass();
     void ComputeLastLayerDelta(int input_index);
     void ComputeDeltas();

@@ -41,22 +41,25 @@ std::vector<double> HiddenLayer::getValues()
 	return values;
 }
 
-void HiddenLayer::computeValue()
+void HiddenLayer::computeValue(double lambda)
 {
 	for (int neuron_idx = 1; neuron_idx < this->neurons.size(); neuron_idx++)
 	{
 		Neuron& neuron = this->neurons[neuron_idx];
-		neuron.value = 0;
+		neuron.value = neuron.sum = 0;
 
 		//TODO: more efficient way of getting inputs?
 		std::vector<double> inputs = this->previous_layer->getValues();
 
 		for (int i = 0; i < neuron.weights.size(); i++)
-			neuron.value += neuron.weights[i] * inputs[i];
+			neuron.sum += neuron.weights[i] * inputs[i];
+
+        //TODO: activation
+        neuron.value = 1/(1 + exp(-lambda * neuron.sum));
 	}
 }
 
-double HiddenLayer::computeLastLayerDelta(const std::vector<double>& expected)
+double HiddenLayer::computeLastLayerDelta(const std::vector<double>& expected, double lambda)
 {
 	double error = 0;
 	for (int neuron_idx = 0; neuron_idx < this->neurons.size(); neuron_idx++)
@@ -69,7 +72,7 @@ double HiddenLayer::computeLastLayerDelta(const std::vector<double>& expected)
 	return error;
 }
 
-void HiddenLayer::computePreviousLayerDelta()
+void HiddenLayer::computePreviousLayerDelta(double lambda)
 {
 	//TODO: je to vzdy hidden layer? => ANO
 	// pocicat deltu pre vstupny neuron nema zmysel
@@ -93,7 +96,7 @@ void HiddenLayer::computePreviousLayerDelta()
 	}
 }
 
-void HiddenLayer::computeWeights()
+void HiddenLayer::computeWeights(double learning_rate, double momentum)
 {				
 	//not iterating over first neuron
 	for (int neuron_idx = 1; neuron_idx < neurons.size(); neuron_idx++)

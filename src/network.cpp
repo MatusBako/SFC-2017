@@ -6,7 +6,6 @@ Network::Network(Arguments args)
     reloadArguments();
 }
 
-
 void Network::reloadArguments()
 {
     lambda = arguments.lambda;
@@ -16,12 +15,12 @@ void Network::reloadArguments()
     input_data = arguments.input_data;
     expected_output = arguments.expected_output;
 
-    int input_neuron_count = input_data[0].size();
+    unsigned long input_neuron_count = input_data[0].size();
     std::shared_ptr<InputLayer> input_layer = std::make_shared<InputLayer>(input_neuron_count);
 
     for (unsigned int neuron_count: arguments.layers)
     {
-        if (hidden_layers.size())
+        if (!hidden_layers.empty())
             //create new Hidden layer with encapsulated previous layer
             hidden_layers.push_back(std::make_shared<HiddenLayer>(
                     std::make_shared<LayerAdapter>(hidden_layers[hidden_layers.size() - 1]), neuron_count));
@@ -34,13 +33,8 @@ void Network::reloadArguments()
 
 Network::~Network()
 {
-    while (hidden_layers.size())
+    while (!hidden_layers.empty())
         hidden_layers.pop_back();
-}
-
-double Network::Activation(double value)
-{
-	return 1/(1+exp(-lambda*value));
 }
 
 void Network::Train()
@@ -69,33 +63,33 @@ void Network::Train()
 void Network::ForwardPass() 
 {
 	//first layer only contains inputs
-	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
-		hidden_layers[layer_idx]->computeValue();
+	for (auto &hidden_layer : hidden_layers)
+        hidden_layer->computeValue(lambda);
 }
 
 void Network::ComputeLastLayerDelta(int input_index)
 {
 	//iterate over neurons of last layer (last layer doesn't have constant neuron)
 	HiddenLayer& layer_last = (*hidden_layers[hidden_layers.size()-1]);
-	double Error_sample = layer_last.computeLastLayerDelta(expected_output[input_index]);
+	double Error_sample = layer_last.computeLastLayerDelta(expected_output[input_index], lambda);
 	error_total += Error_sample;
 }
 
 //not iterating over first two layers
 void Network::ComputeDeltas()
 {
-	for (int layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
-		hidden_layers[layer_idx]->computePreviousLayerDelta();
+	for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
+		hidden_layers[layer_idx]->computePreviousLayerDelta(lambda);
 }
 
 void Network::ComputeWeights()
 {
-	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
-		hidden_layers[layer_idx]->computeWeights();
+	for (auto &hidden_layer : hidden_layers)
+        hidden_layer->computeWeights(learning_rate, momentum);
 }
 
 void Network::AdjustWeights()
 {
-	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
-		hidden_layers[layer_idx]->adjustWeights();
+	for (auto &hidden_layer : hidden_layers)
+        hidden_layer->adjustWeights();
 }
