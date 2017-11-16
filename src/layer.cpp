@@ -2,8 +2,8 @@
 
 InputLayer::InputLayer(int input_count)
 {
-	values = std::vector<double>(input_count, 0);
-	node_count = input_count;
+	values = std::vector<double>(input_count + 1, 0);
+	node_count = input_count + 1;
 }
 
 std::vector<double> InputLayer::getValues()
@@ -13,23 +13,31 @@ std::vector<double> InputLayer::getValues()
 
 void InputLayer::setValues(std::vector<double>* src)
 {
-	values.clear();
-	for (double value: *src)
-		values.push_back(value);
+    if (src->size() != node_count - 1)
+        throw ("Number of inputs does not equal node count - 1.");
+
+	for (int i = 0; i < src->size(); i++)
+		values[i+1] = (*src)[i];
 }
 
 HiddenLayer::HiddenLayer(std::shared_ptr<LayerAdapter> input_layer,int neuron_count)
 {
-    previous_layer = input_layer;
 
-	for (int i = 0; i < neuron_count; i++)
+    node_count = neuron_count + 1;
+
+    Neuron neuron = {.value = 1};
+    neurons.push_back(neuron);
+
+    for (int i = 1; i < neuron_count + 1; i++)
 	{
-		Neuron neuron = {};
-		for (int weight_idx = 0; weight_idx < input_layer->getNodeCount(); weight_idx++)
-			neuron.weights.push_back(WeightInitializer::initXavier(input_layer->getNodeCount()));
+        neuron = Neuron();
+
+		for (int weight_idx = 0; weight_idx < previous_layer->getNodeCount(); weight_idx++)
+			neuron.weights.push_back(WeightInitializer::initXavier(previous_layer->getNodeCount()));
 
 		neurons.push_back(neuron);
 	}
+
 }
 
 std::vector<double> HiddenLayer::getValues()
@@ -118,7 +126,8 @@ void HiddenLayer::computeWeights(double learning_rate, double momentum)
 }
 
 void HiddenLayer::adjustWeights()
-{for (int neuron_idx = 1; neuron_idx < neurons.size(); neuron_idx++)
+{
+    for (int neuron_idx = 1; neuron_idx < neurons.size(); neuron_idx++)
 	{
 		Neuron& neuron = neurons[neuron_idx];
 		

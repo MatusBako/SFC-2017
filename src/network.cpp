@@ -18,12 +18,17 @@ void Network::reloadArguments()
     unsigned long input_neuron_count = input_data[0].size();
     std::shared_ptr<InputLayer> input_layer = std::make_shared<InputLayer>(input_neuron_count);
 
-    for (unsigned int neuron_count: arguments.layers)
+    bool is_last_layer;
+
+    for (int i = 0; i < arguments.layers.size(); i++)
     {
+        auto neuron_count = arguments.layers[i];
+        is_last_layer = (i == arguments.layers.size() - 1);
+
         if (!hidden_layers.empty())
             //create new Hidden layer with encapsulated previous layer
             hidden_layers.push_back(std::make_shared<HiddenLayer>(
-                    std::make_shared<LayerAdapter>(hidden_layers[hidden_layers.size() - 1]), neuron_count));
+                    std::make_shared<LayerAdapter>(hidden_layers[hidden_layers.size() - 1]), neuron_count, is_last_layer));
         else
             //create new Hidden layer with encapsulated input layer
             hidden_layers.push_back(std::make_shared<HiddenLayer>(

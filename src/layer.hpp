@@ -27,7 +27,7 @@ public:
 	std::vector<double> getValues();
 	void setValues(std::vector<double>* v);
 
-//private:
+private:
 	std::vector<double> values;
 };
 
