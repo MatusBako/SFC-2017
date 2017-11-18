@@ -15,6 +15,8 @@
 class Arguments
 {
 public:
+    Arguments();
+    Arguments(const Arguments& obj);
 	bool Parse(int argc, char** argv);
     void PrintDebugValues();
 

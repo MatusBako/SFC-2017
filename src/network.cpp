@@ -2,7 +2,7 @@
 
 Network::Network(Arguments args)
 {
-    arguments = args;
+    arguments = Arguments(args);
     reloadArguments();
 }
 
@@ -14,11 +14,13 @@ void Network::reloadArguments()
     error_expected = arguments.expected_error;
     input_data = arguments.input_data;
     expected_output = arguments.expected_output;
+    error_total = 0;
 
     unsigned long input_neuron_count = input_data[0].size();
-    std::shared_ptr<InputLayer> input_layer = std::make_shared<InputLayer>(input_neuron_count);
+    input_layer = std::make_shared<InputLayer>(input_neuron_count);
 
     bool is_last_layer;
+    auto initializer = std::make_shared<WeightInitializer>();
 
     for (int i = 0; i < arguments.layers.size(); i++)
     {
@@ -27,12 +29,12 @@ void Network::reloadArguments()
 
         if (!hidden_layers.empty())
             //create new Hidden layer with encapsulated previous layer
-            hidden_layers.push_back(std::make_shared<HiddenLayer>(
+            hidden_layers.push_back(std::make_shared<HiddenLayer>(initializer,
                     std::make_shared<LayerAdapter>(hidden_layers[hidden_layers.size() - 1]), neuron_count, is_last_layer));
         else
             //create new Hidden layer with encapsulated input layer
-            hidden_layers.push_back(std::make_shared<HiddenLayer>(
-                    std::make_shared<LayerAdapter>(input_layer), neuron_count));
+            hidden_layers.push_back(std::make_shared<HiddenLayer>(initializer,
+                    std::make_shared<LayerAdapter>(input_layer), neuron_count, is_last_layer));
     }
 }
 
@@ -44,12 +46,13 @@ Network::~Network()
 
 void Network::Train()
 {
-	do 
+	do
 	{ 
 		error_total = 0;
 		for (int input_index = 0; input_index < input_data.size(); input_index++)
 		{
-			input_layer->setValues(&input_data[input_index]);
+			input_layer->setValues(input_data[input_index]);
+			//input_layer->setValues(std::vector<double >({0 , 0}));
 
 			ForwardPass();
 
@@ -80,7 +83,7 @@ void Network::ComputeLastLayerDelta(int input_index)
 	error_total += Error_sample;
 }
 
-//not iterating over first two layers
+//not iterating over first layer
 void Network::ComputeDeltas()
 {
 	for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)

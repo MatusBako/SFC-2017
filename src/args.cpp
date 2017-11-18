@@ -113,7 +113,7 @@ bool Arguments::Parse(int argc, char** argv)
 				return PrintErrAndReturn("Error option entered more than once.");
 
 			if (i+1 >= argc)
-				return PrintErrAndReturn("Value for error not entered.");
+				return PrintErrAndReturn("Value for expected error not entered.");
 
 			std::string s = static_cast<std::string>(argv[++i]);
 			double converted = std::stod(s, &size);
@@ -121,12 +121,11 @@ bool Arguments::Parse(int argc, char** argv)
 			if (s.length() != size)
 				return PrintErrAndReturn("Conversion error (error).");
 
-
 			if (converted < 0)
 				//TODO: proper error interval
-				return PrintErrAndReturn("Momentum not in interval (0, ?>.");
+				return PrintErrAndReturn("Expected error not in interval (0, ?>.");
 
-			momentum = converted;
+			expected_error = converted;
 			argument_set['e'] = true;
 		}
 
@@ -135,6 +134,8 @@ bool Arguments::Parse(int argc, char** argv)
 		{
 			if (argument_set['f'])
 				return PrintErrAndReturn("File option entered more than once.");
+			argument_set['f'] = true;
+
 
 			if (i+1 >= argc)
 				return PrintErrAndReturn("Value for input file not entered.");
@@ -239,14 +240,8 @@ bool Arguments::Parse(int argc, char** argv)
 	std::cout << "argument count - " << argument_set.size() << std::endl;
 
     // TODO: for debugging purposes
-	if (argument_set.size() < 6)
-		return false;
+	return argument_set.size() >= 6;
 
-	if (argument_set['f'])
-		return PrintErrAndReturn("Input file option entered more than once.");
-	argument_set['f'] = true;
-
-	return true;
 }
 
 bool Arguments::PrintErrAndReturn(std::string message)
@@ -286,8 +281,11 @@ void Arguments::PrintDebugValues()
         std:: cout << std::endl;
     }
 
-    if (argument_set['r'])
-        std::cout << "lr - " << learning_rate << std::endl;
+	if (argument_set['r'])
+		std::cout << "lr - " << learning_rate << std::endl;
+
+	if (argument_set['e'])
+		std::cout << "e - " << expected_error << std::endl;
 
     if (argument_set['b'])
         std::cout << "lambda " << lambda << std::endl;
@@ -325,4 +323,21 @@ void Arguments::PrintHelp()
             << "-b, --lambda: momentum" << std::endl
             << "-f, --input-file" <<    std::endl
             << "-e, --error" <<    std::endl;
+}
+
+Arguments::Arguments(const Arguments &obj):
+	argument_set(obj.argument_set),
+	expected_error(obj.expected_error),
+	lambda(obj.lambda),
+	learning_rate(obj.learning_rate),
+	momentum(obj.momentum),
+	layers(obj.layers),
+	input_data(obj.input_data),
+	expected_output(obj.expected_output)
+{
+
+}
+
+Arguments::Arguments()
+{
 }

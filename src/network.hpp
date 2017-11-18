@@ -11,8 +11,6 @@ class Network
 {
 public:
 	void Train();
-	double computeGradient();
-	void updateWeights();
     void reloadArguments();
 
     explicit Network(Arguments args);
@@ -24,7 +22,6 @@ private:
     void ComputeDeltas();
     void ComputeWeights();
     void AdjustWeights();
-
 
     Arguments arguments;
     std::shared_ptr<InputLayer> input_layer;

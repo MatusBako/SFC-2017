@@ -12,11 +12,12 @@ class LayerAdapter;
 
 class Layer
 {
-public:	
+public:
+    int getNodeCount();
 	int node_count;
 
 protected:
-	Layer() {};
+	Layer(int node_count);
 };
 
 class InputLayer: public Layer
@@ -25,7 +26,7 @@ public:
 	InputLayer(int input_count);
 
 	std::vector<double> getValues();
-	void setValues(std::vector<double>* v);
+	void setValues(const std::vector<double>& v);
 
 private:
 	std::vector<double> values;
@@ -35,7 +36,7 @@ private:
 class HiddenLayer: public Layer
 {
 public:
-	HiddenLayer(std::shared_ptr<LayerAdapter> input, int neuron_count);
+	HiddenLayer(std::shared_ptr<WeightInitializer> initalizer, std::shared_ptr<LayerAdapter> input, int neuron_count, bool is_last);
 
 	std::vector<double> getValues();
 	void computeValue(double lambda);
@@ -44,9 +45,10 @@ public:
 	void computeWeights(double learning_rate, double momentum);
 	void adjustWeights();
 
-private:
+//private:
 	std::shared_ptr<LayerAdapter> previous_layer;
 	std::vector<Neuron> neurons;
+    bool is_last_layer;
 };
 
 class LayerAdapter
