@@ -3,6 +3,7 @@
 
 #include "neuron.hpp"
 #include "weight_init.hpp"
+#include "train_params.hpp"
 
 #include <functional>
 #include <memory>
@@ -36,16 +37,16 @@ private:
 class HiddenLayer: public Layer
 {
 public:
-	HiddenLayer(std::shared_ptr<WeightInitializer> initalizer, std::shared_ptr<LayerAdapter> input, int neuron_count, bool is_last);
+	HiddenLayer(std::shared_ptr<WeightInitializer> initalizer, std::shared_ptr<TrainingParams> train_params,  std::shared_ptr<LayerAdapter> input, int neuron_count, bool is_last);
 
 	std::vector<double> getValues();
-	void computeValue(double lambda);
-	void computePreviousLayerDelta(double lambda);
-	double computeLastLayerDelta(const std::vector<double>& expected, double lambda);
-	void computeWeights(double learning_rate, double momentum);
+	void computeValue();
+	void computePreviousLayerDelta();
+	double computeLastLayerDelta(const std::vector<double>& expected);
+	void computeWeights();
 	void adjustWeights();
 
-//private:
+private:
 	std::shared_ptr<LayerAdapter> previous_layer;
 	std::vector<Neuron> neurons;
     bool is_last_layer;

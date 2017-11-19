@@ -1,3 +1,7 @@
+#ifndef WEIGHT_INIT
+#define WEIGHT_INIT
+
+
 #include <random>
 
 class WeightInitializer
@@ -29,3 +33,4 @@ private:
     std::default_random_engine generator;
 };
 
+#endif //WEIGHT_INIT

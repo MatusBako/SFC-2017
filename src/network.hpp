@@ -3,6 +3,7 @@
 
 #include "args.hpp"
 #include "layer.hpp"
+#include "train_params.hpp"
 
 #include <cmath>
 #include <vector>
@@ -24,13 +25,11 @@ private:
     void AdjustWeights();
 
     Arguments arguments;
+	std::shared_ptr<TrainingParams> train_params = std::make_shared<TrainingParams>();
     std::shared_ptr<InputLayer> input_layer;
     std::vector<std::shared_ptr<HiddenLayer>> hidden_layers;
     double error_total;
     double error_expected;
-    double lambda;
-    double learning_rate;
-    double momentum;
     std::vector<std::vector<double>> input_data;
     std::vector<std::vector<double>> expected_output;
 };
