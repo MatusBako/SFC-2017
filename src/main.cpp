@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     else
     {
         Network net = Network(args);
-        net.Train();
+        net.TrainWithOutput();
     }
 
 

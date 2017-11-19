@@ -26,22 +26,11 @@ std::vector<double> InputLayer::getValues()
 
 void InputLayer::setValues(const std::vector<double>& src)
 {
-    //TODO: DEBUG
-    std::cout << "------------------------" << std::endl;
-    std::cout << "neuron input: ";
-    for (double input: src)
-        std::cout << input << ", ";
-    std::cout << std::endl;
-
-    src.capacity();src.capacity();src.capacity();src.capacity();
-
-
     if (src.size() != node_count - 1)
         throw ("Number of inputs does not equal node count - 1.");
 
 	for (int i = 0; i < src.size(); i++)
 		values[i+1] = src[i];
-
 }
 
 HiddenLayer::HiddenLayer(std::shared_ptr<WeightInitializer> initalizer, std::shared_ptr<TrainingParams> train_params,
@@ -74,46 +63,18 @@ void HiddenLayer::computeValue()
 	auto inputs = previous_layer->getValues();
 	auto p_inputs = std::make_shared<std::vector<double>>(inputs);
 
-
-	std::cout << "inputs: ";
-	for (auto i:inputs)
-		std::cout << i << ", ";
-	std::cout << std::endl;
-
-
 	for (int neuron_idx = is_last_layer ? 0 : 1; neuron_idx < neurons.size(); neuron_idx++)
 		neurons[neuron_idx].computeValue(p_inputs);
-
-    //TODO: DEBUG
-    if (is_last_layer)
-    {
-        std::cout << "neuron output: ";
-        for (auto neuron: neurons)
-            std::cout << neuron.getValue() << ", ";
-        std::cout << std::endl;
-    }
 }
 
 double HiddenLayer::computeLastLayerDelta(const std::vector<double>& expected)
 {
-    //TODO: DEBUG
-    std::cout << "expected output: ";
-    for (auto out: expected)
-        std::cout << out << ", ";
-    std::cout << std::endl;
-
-
 	double error = 0;
 	for (int neuron_idx = 0; neuron_idx < neurons.size(); neuron_idx++)
 	{
 		Neuron& neuron = neurons[neuron_idx];
 		error += neuron.computeLastLayerDelta(expected[neuron_idx]);
-
 	}
-
-    //TODO: DEBUG
-    std::cout << "error = " << error << std::endl;
-
 	return error;
 }
 
@@ -151,6 +112,44 @@ void HiddenLayer::adjustWeights()
     for (int neuron_idx = (is_last_layer ? 0 : 1); neuron_idx < neurons.size(); neuron_idx++)
 		neurons[neuron_idx].adjustWeights();
 }
+
+void HiddenLayer::printValues(std::string start, std::string delim)
+{
+	for (auto neuron: neurons)
+		std::cout << neuron.getValue() << delim;
+	std::cout << std::endl;
+}
+
+void HiddenLayer::printDeltas(std::string start, std::string delim)
+{
+	std::cout << start;
+	for (auto neuron: neurons)
+		std::cout << neuron.getDelta() << delim;
+	std::cout << std::endl;
+}
+
+void HiddenLayer::printWeightDeltas(std::string start, std::string delim)
+{
+	for (int neuron_idx = 0; neuron_idx < neurons.size(); neuron_idx++)
+	{
+		std::cout << start << "N" << neuron_idx << ": ";
+		for (auto weight: neurons[neuron_idx].getWeightDeltas())
+			std::cout << weight << ", ";
+		std::cout << std::endl;
+	}
+}
+
+void HiddenLayer::printWeights(std::string start, std::string delim)
+{
+	for (int neuron_idx = 0; neuron_idx < neurons.size(); neuron_idx++)
+	{
+		std::cout << start << "N" << neuron_idx << ": ";
+		for (auto weight: neurons[neuron_idx].getWeights())
+			std::cout << weight << ", ";
+		std::cout << std::endl;
+	}
+}
+
 
 LayerAdapter::LayerAdapter(std::shared_ptr<HiddenLayer> layer)
 {

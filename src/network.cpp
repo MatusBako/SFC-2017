@@ -47,7 +47,6 @@ Network::~Network()
 
 void Network::Train()
 {
-	std::string a;
 	do
 	{ 
 		error_total = 0;
@@ -64,11 +63,36 @@ void Network::Train()
 
 			ComputeWeights();
 			AdjustWeights();
-
-			std::cin.get();
  		}
  	}
  	while (error_total > error_expected);
+}
+
+
+
+void Network::TrainWithOutput()
+{
+	std::string a;
+	do
+	{
+		error_total = 0;
+		for (int input_index = 0; input_index < input_data.size(); input_index++)
+		{
+			input_layer->setValues(input_data[input_index]);
+
+			ForwardPassPrint();
+
+			ComputeLastLayerDeltaPrint(input_index);
+
+			ComputeDeltasPrint();
+
+			ComputeWeightsPrint();
+			AdjustWeightsPrint();
+
+			std::cin.get();
+		}
+	}
+	while (error_total > error_expected);
 }
 
 void Network::ForwardPass() 
@@ -103,4 +127,58 @@ void Network::AdjustWeights()
 {
 	for (auto &hidden_layer : hidden_layers)
         hidden_layer->adjustWeights();
+}
+
+void Network::ForwardPassPrint()
+{
+	std::cout << "Values:" << std::endl;
+	//first layer only contains inputs
+	for (int l_index = 0; l_index < hidden_layers.size(); l_index++)
+	{
+		hidden_layers[l_index]->computeValue();
+		hidden_layers[l_index]->printValues(std::string("L")+std::to_string(l_index)+": ", " ");
+	}
+}
+
+void Network::ComputeLastLayerDeltaPrint(int input_index)
+{
+	std::cout << "Deltas:" << std::endl;
+	//iterate over neurons of last layer (last layer doesn't have constant neuron)
+	HiddenLayer& layer_last = (*hidden_layers[hidden_layers.size()-1]);
+	double Error_sample = layer_last.computeLastLayerDelta(expected_output[input_index]);
+	error_total += Error_sample;
+
+	layer_last.printDeltas(std::string("L")+std::to_string(hidden_layers.size())+std::string(": "), " ");
+
+}
+
+//not iterating over first layer
+void Network::ComputeDeltasPrint()
+{
+	for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
+	{
+		hidden_layers[layer_idx]->computePreviousLayerDelta();
+		hidden_layers[layer_idx]->printDeltas(std::string("L")+std::to_string(layer_idx+1), " ");
+	}
+}
+
+void Network::ComputeWeightsPrint()
+{
+	std::cout << "Weight deltas:" << std::endl;
+	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+	{
+		hidden_layers[layer_idx]->computeWeights();
+		hidden_layers[layer_idx]->printWeightDeltas(std::string("L")+std::to_string(layer_idx+1), " ");
+
+	}
+}
+
+void Network::AdjustWeightsPrint()
+{
+	std::cout << "New Weights:" << std::endl;
+	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+	{
+		hidden_layers[layer_idx]->adjustWeights();
+		hidden_layers[layer_idx]->printWeights(std::string("L")+std::to_string(layer_idx+1), " ");
+	}
 }

@@ -31,6 +31,21 @@ double Neuron::getValue()
     return value;
 }
 
+double Neuron::getDelta()
+{
+	return delta;
+}
+
+const std::vector<double>& Neuron::getWeights()
+{
+	return weights;
+}
+
+const std::vector<double>& Neuron::getWeightDeltas()
+{
+	return delta_weights;
+}
+
 double Neuron::computeLastLayerDelta(double expected)
 {
     double error = 0.5 * (expected - value) * (expected - value);

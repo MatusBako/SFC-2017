@@ -6,12 +6,14 @@
 #include "train_params.hpp"
 
 #include <cmath>
+#include <string>
 #include <vector>
 
 class Network
 {
 public:
 	void Train();
+	void TrainWithOutput();
     void reloadArguments();
 
     explicit Network(Arguments args);
@@ -23,6 +25,15 @@ private:
     void ComputeDeltas();
     void ComputeWeights();
     void AdjustWeights();
+
+	void ForwardPassPrint();
+
+	void ComputeLastLayerDeltaPrint(int input_index);
+
+	void ComputeDeltasPrint();
+
+	void ComputeWeightsPrint();
+	void AdjustWeightsPrint();
 
     Arguments arguments;
 	std::shared_ptr<TrainingParams> train_params = std::make_shared<TrainingParams>();

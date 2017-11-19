@@ -19,6 +19,10 @@ public:
     Neuron(std::shared_ptr<TrainingParams> train_params,double value);
 
 	double getValue();
+	double getDelta();
+	const std::vector<double>& getWeights();
+	const std::vector<double>& getWeightDeltas();
+
 	double getWeightedDelta(uint weight_index);
     void computeValue(std::shared_ptr<std::vector<double>> inputs);
 	double computeLastLayerDelta(double expected);

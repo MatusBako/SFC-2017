@@ -46,6 +46,11 @@ public:
 	void computeWeights();
 	void adjustWeights();
 
+	void printValues(std::string start, std::string delim);
+	void printDeltas(std::string start, std::string delim);
+	void printWeightDeltas(std::string start, std::string delim);
+	void printWeights(std::string start, std::string delim);
+
 private:
 	std::shared_ptr<LayerAdapter> previous_layer;
 	std::vector<Neuron> neurons;
