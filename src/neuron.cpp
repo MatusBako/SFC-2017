@@ -3,11 +3,13 @@
 Neuron::Neuron(std::shared_ptr<WeightInitializer> initalizer,
 			   std::shared_ptr<TrainingParams> train_params,
 			   int weight_count):
-delta_weights(std::vector<double >(weight_count)),
+delta_weights(std::vector<double>(weight_count)),
+weights_old(std::vector<double>(weight_count, 0.)),
 train_params(train_params)
 {
     for (int weight_idx = 0; weight_idx < weight_count; weight_idx++)
         weights.push_back(initalizer->initXavier(weight_count));
+
 }
 
 Neuron::Neuron(std::shared_ptr<TrainingParams> train_params,double value):
@@ -69,13 +71,17 @@ void Neuron::computeWeights(std::vector<double>& inputs)
     //iterating over all weights (also first neuron)
     for (int weight_idx = 0; weight_idx < inputs.size(); weight_idx++)
     {
-        delta_weights[weight_idx] = -train_params->learning_rate * delta
-                                    * inputs[weight_idx] + train_params->momentum * delta_weights[weight_idx];
+        delta_weights[weight_idx] += train_params->learning_rate * delta
+                                    * inputs[weight_idx] + train_params->momentum * weights_old[weight_idx];
     }
 }
 
 void Neuron::adjustWeights()
 {
     for (int weight_idx = 0; weight_idx < weights.size(); weight_idx++)
-        weights[weight_idx] += delta_weights[weight_idx];
+	{
+		weights_old[weight_idx] =  weights[weight_idx];
+		weights[weight_idx] = delta_weights[weight_idx];
+		delta_weights[weight_idx] = 0;
+	}
 }

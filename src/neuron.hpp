@@ -33,6 +33,7 @@ public:
 private:
 	std::shared_ptr<TrainingParams> train_params;
 	std::vector<double> weights;
+	std::vector<double> weights_old;
 	std::vector<double> delta_weights;
 	double value;
 	double sum;

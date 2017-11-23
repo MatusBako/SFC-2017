@@ -27,7 +27,7 @@ public:
 	InputLayer(int input_count);
 
 	std::vector<double> getValues();
-	void setValues(const std::vector<double>& v);
+	void setValues(const std::vector<double>& v, bool debugOutput);
 
 private:
 	std::vector<double> values;

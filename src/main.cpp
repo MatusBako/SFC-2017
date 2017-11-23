@@ -1,4 +1,3 @@
-#include "layer.hpp"
 #include "args.hpp"
 #include "network.hpp"
 
@@ -30,11 +29,17 @@ int main(int argc, char** argv)
     }
     else
     {
-        Network net = Network(args);
-        net.TrainWithOutput();
+		try
+		{
+			Network net = Network(args);
+			net.BGD(true);
+		}
+		catch (const char*  e)
+		{
+			std::cout << e << std::endl;
+			return 1;
+		}
     }
-
-
 
 	return 0;
 }

@@ -4,6 +4,13 @@ Network::Network(Arguments args)
 {
     arguments = Arguments(args);
     reloadArguments();
+
+	if (args.input_data[0].size() != hidden_layers[0]->getNodeCount() - 1)
+		throw "Number of neurons in first layer not equal with input data length.";
+
+	if (args.expected_output[0].size() != hidden_layers[hidden_layers.size()-1]->getNodeCount())
+		throw "Number of neurons in last layer not equal with expected data length.";
+
 }
 
 void Network::reloadArguments()
@@ -37,6 +44,8 @@ void Network::reloadArguments()
             hidden_layers.push_back(std::make_shared<HiddenLayer>(initializer,train_params,
                     std::make_shared<LayerAdapter>(input_layer), neuron_count, is_last_layer));
     }
+
+
 }
 
 Network::~Network()
@@ -45,140 +54,134 @@ Network::~Network()
         hidden_layers.pop_back();
 }
 
-void Network::Train()
+void Network::SGD(bool debugOutput)
 {
-	do
-	{ 
-		error_total = 0;
-		for (int input_index = 0; input_index < input_data.size(); input_index++)
-		{
-			input_layer->setValues(input_data[input_index]);
-			//input_layer->setValues(std::vector<double >({0 , 0}));
-
-			ForwardPass();
-
-			ComputeLastLayerDelta(input_index);
-
-			ComputeDeltas();
-
-			ComputeWeights();
-			AdjustWeights();
- 		}
- 	}
- 	while (error_total > error_expected);
-}
-
-
-
-void Network::TrainWithOutput()
-{
-	std::string a;
 	do
 	{
 		error_total = 0;
 		for (int input_index = 0; input_index < input_data.size(); input_index++)
 		{
-			input_layer->setValues(input_data[input_index]);
+			input_layer->setValues(input_data[input_index], debugOutput);
 
-			ForwardPassPrint();
+			ForwardPass(debugOutput);
 
-			ComputeLastLayerDeltaPrint(input_index);
+			ComputeLastLayerDelta(input_index, debugOutput);
 
-			ComputeDeltasPrint();
+			ComputeDeltas(debugOutput);
 
-			ComputeWeightsPrint();
-			AdjustWeightsPrint();
+			ComputeWeights(debugOutput);
+			AdjustWeights(debugOutput);
 
-			std::cin.get();
+			if (debugOutput)
+				std::cout << "Sample error: " << error_total << std::endl;
 		}
 	}
 	while (error_total > error_expected);
 }
 
-void Network::ForwardPass() 
+void Network::BGD(bool debugOutput)
 {
-	//first layer only contains inputs
-	for (auto &hidden_layer : hidden_layers)
-        hidden_layer->computeValue();
+	do
+	{
+		error_total = 0;
+		for (int input_index = 0; input_index < input_data.size(); input_index++)
+		{
+			input_layer->setValues(input_data[input_index], debugOutput);
+
+			ForwardPass(debugOutput);
+
+			ComputeLastLayerDelta(input_index, debugOutput);
+
+			ComputeDeltas(debugOutput);
+
+			ComputeWeights(debugOutput);
+
+			std::getchar();
+		}
+		AdjustWeights(debugOutput);
+
+		if (debugOutput)
+			std::cout << "Batch error: " << error_total << std::endl;
+	}
+	while (error_total > error_expected);
 }
 
-void Network::ComputeLastLayerDelta(int input_index)
+
+void Network::ForwardPass(bool debugOutput)
+{
+	if (debugOutput)
+	{
+		std::cout << "Values:" << std::endl;
+
+		for (int l_index = 0; l_index < hidden_layers.size(); l_index++)
+		{
+			hidden_layers[l_index]->computeValue();
+			hidden_layers[l_index]->printValues(std::string("L") + std::to_string(l_index) + ": ", " ");
+		}
+	}
+	else
+		for (auto &hidden_layer : hidden_layers)
+			hidden_layer->computeValue();
+}
+
+void Network::ComputeLastLayerDelta(int input_index, bool debugOutput)
 {
 	//iterate over neurons of last layer (last layer doesn't have constant neuron)
 	HiddenLayer& layer_last = (*hidden_layers[hidden_layers.size()-1]);
 	double Error_sample = layer_last.computeLastLayerDelta(expected_output[input_index]);
 	error_total += Error_sample;
+
+	if (debugOutput)
+	{
+		std::cout << "Sample error: " << Error_sample << std::endl;
+		std::cout << "Deltas:" << std::endl;
+		layer_last.printDeltas(std::string("L")+std::to_string(hidden_layers.size())+std::string(": "), " ");
+	}
 }
 
 //not iterating over first layer
-void Network::ComputeDeltas()
+void Network::ComputeDeltas(bool debugOutput)
 {
-	for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
-		hidden_layers[layer_idx]->computePreviousLayerDelta();
+	if (debugOutput)
+		for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
+		{
+			hidden_layers[layer_idx]->computePreviousLayerDelta();
+			hidden_layers[layer_idx-1]->printDeltas(std::string("L")+std::to_string(layer_idx) + std::string(": "), " ");
+		}
+	else
+		for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
+			hidden_layers[layer_idx]->computePreviousLayerDelta();
 }
 
-void Network::ComputeWeights()
+void Network::ComputeWeights(bool debugOutput)
 {
-	for (auto &hidden_layer : hidden_layers)
-        hidden_layer->computeWeights();
-}
-
-void Network::AdjustWeights()
-{
-	for (auto &hidden_layer : hidden_layers)
-        hidden_layer->adjustWeights();
-}
-
-void Network::ForwardPassPrint()
-{
-	std::cout << "Values:" << std::endl;
-	//first layer only contains inputs
-	for (int l_index = 0; l_index < hidden_layers.size(); l_index++)
+	if (debugOutput)
 	{
-		hidden_layers[l_index]->computeValue();
-		hidden_layers[l_index]->printValues(std::string("L")+std::to_string(l_index)+": ", " ");
+		std::cout << "Weight deltas:" << std::endl;
+		for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+		{
+			hidden_layers[layer_idx]->computeWeights();
+			hidden_layers[layer_idx]->printWeightDeltas(std::string("L")+std::to_string(layer_idx+1), " ");
+		}
 	}
+	else
+		for (auto &hidden_layer : hidden_layers)
+			hidden_layer->computeWeights();
 }
 
-void Network::ComputeLastLayerDeltaPrint(int input_index)
+void Network::AdjustWeights(bool debugOutput)
 {
-	std::cout << "Deltas:" << std::endl;
-	//iterate over neurons of last layer (last layer doesn't have constant neuron)
-	HiddenLayer& layer_last = (*hidden_layers[hidden_layers.size()-1]);
-	double Error_sample = layer_last.computeLastLayerDelta(expected_output[input_index]);
-	error_total += Error_sample;
-
-	layer_last.printDeltas(std::string("L")+std::to_string(hidden_layers.size())+std::string(": "), " ");
-
-}
-
-//not iterating over first layer
-void Network::ComputeDeltasPrint()
-{
-	for (unsigned long layer_idx = hidden_layers.size() - 1; layer_idx > 0; layer_idx--)
+	if (debugOutput)
 	{
-		hidden_layers[layer_idx]->computePreviousLayerDelta();
-		hidden_layers[layer_idx]->printDeltas(std::string("L")+std::to_string(layer_idx+1), " ");
-	}
-}
+		std::cout << "New Weights:" << std::endl;
 
-void Network::ComputeWeightsPrint()
-{
-	std::cout << "Weight deltas:" << std::endl;
-	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
-	{
-		hidden_layers[layer_idx]->computeWeights();
-		hidden_layers[layer_idx]->printWeightDeltas(std::string("L")+std::to_string(layer_idx+1), " ");
-
+		for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
+		{
+			hidden_layers[layer_idx]->adjustWeights();
+			hidden_layers[layer_idx]->printWeights(std::string("L")+std::to_string(layer_idx+1), " ");
+		}
 	}
-}
-
-void Network::AdjustWeightsPrint()
-{
-	std::cout << "New Weights:" << std::endl;
-	for (int layer_idx = 0; layer_idx < hidden_layers.size(); layer_idx++)
-	{
-		hidden_layers[layer_idx]->adjustWeights();
-		hidden_layers[layer_idx]->printWeights(std::string("L")+std::to_string(layer_idx+1), " ");
-	}
+	else
+		for (auto &hidden_layer : hidden_layers)
+			hidden_layer->adjustWeights();
 }
